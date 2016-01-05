@@ -1,6 +1,9 @@
 #ifndef CLO_H_INCLUDED
 #define CLO_H_INCLUDED
 
+#define CLO_DECODE_UTF8_ACCEPT 0
+#define CLO_DECODE_UTF8_REJECT 12
+
 enum
 {
   CLO_UNDEFINED = 0,
@@ -41,4 +44,12 @@ struct clo_pair
 #define clo_false()     ((clo){.type = CLO_FALSE})
 #define clo_null()      ((clo){.type = CLO_NULL})
 
+uint32_t clo_decode_utf8(uint32_t *, uint32_t *, uint32_t);
+void     clo_encode_append(buffer *, char *, int *);
+void     clo_encode_control(buffer *, uint8_t, int *);
+int      clo_encode_utf8(buffer *, char *, int *);
+void     clo_encode_string(buffer *, char *, int *);
+void     clo_encode_number(buffer *, double, int *);
+void     clo_encode(clo *, buffer *, int *);
+  
 #endif /* CLO_H_INCLUDED*/

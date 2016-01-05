@@ -5,7 +5,7 @@
 
 #include "clo.h"
 
-// clo_decode_utf8 based on http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
+// clo_decode_utf8 from http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
 uint32_t clo_decode_utf8(uint32_t *state, uint32_t *codep, uint32_t byte)
 {
   static const uint8_t utf8d[] = {
@@ -24,11 +24,11 @@ uint32_t clo_decode_utf8(uint32_t *state, uint32_t *codep, uint32_t byte)
     12,36,12,12,12,12,12,12,12,12,12,12
   };
   uint32_t type = utf8d[byte];
-  
+
   *codep = (*state != CLO_DECODE_UTF8_ACCEPT) ?
     (byte & 0x3fu) | (*codep << 6) :
     (0xff >> type) & (byte);
-  
+
   *state = utf8d[256 + *state + type];
   return *state;
 }
@@ -65,9 +65,9 @@ int clo_encode_utf8(buffer *b, char *string, int *error)
       (void) clo_decode_utf8(&state, &codepoint, (uint8_t) string[i]);
       i ++;
       if (state == CLO_DECODE_UTF8_ACCEPT || state == CLO_DECODE_UTF8_REJECT)
-	break;
+        break;
     }
-  
+
   if (state == CLO_DECODE_UTF8_ACCEPT)
     buffer_insert(b, buffer_size(b), string, i);
   else
@@ -85,36 +85,36 @@ void clo_encode_string(buffer *b, char *string, int *error)
       buffer_reserve(b, buffer_size(b) + strlen(string));
       data = buffer_data(b) + buffer_size(b);
       while (*string >= 0x20 && *string != '"' && *string != '\\')
-	{
-	  *data = *string;
-	  data ++;
-	  string ++;
-	}
+        {
+          *data = *string;
+          data ++;
+          string ++;
+        }
       b->size = data - buffer_data(b);
       if (*string < 0)
-	string += clo_encode_utf8(b, string, error);
+        string += clo_encode_utf8(b, string, error);
       else if (!*string)
-	break;
+        break;
       else if (*string < 0x20)
-	{
-	  clo_encode_control(b, *string, error);
-	  string ++;
-	}
+        {
+          clo_encode_control(b, *string, error);
+          string ++;
+        }
       else if (*string == '"')
-	{
-	  clo_encode_append(b, "\\\"", error);
-	  string ++;
-	}
+        {
+          clo_encode_append(b, "\\\"", error);
+          string ++;
+        }
       else if (*string == '\\')
-	{
-	  clo_encode_append(b, "\\\\", error);
-	  string ++;
-	}
+        {
+          clo_encode_append(b, "\\\\", error);
+          string ++;
+        }
       else
-	{
-	  (*error) ++;
-	  return;
-	}
+        {
+          (*error) ++;
+          return;
+        }
     }
   clo_encode_append(b, "\"", error);
 }
@@ -123,9 +123,9 @@ void clo_encode_number(buffer *b, double number, int *error)
 {
   char string[32];
   int e;
-  
+
   e = snprintf(string, sizeof string, "%.16g", number);
-  if (e > 0 && e < sizeof string)
+  if (e > 0 && e < (int) sizeof string)
     clo_encode_append(b, string, error);
   else
     (*error) ++;
@@ -144,23 +144,23 @@ void clo_encode(clo *o, buffer *b, int *error)
     case CLO_OBJECT:
       clo_encode_append(b, "{", error);
       for (clo_pair *p = o->object; p->string; p ++)
-	{
-	  clo_encode_string(b, p->string, error);
-	  clo_encode_append(b, ":", error);
-	  clo_encode(&p->value, b, error);
-	  if (p[1].string)
-	    clo_encode_append(b, ",", error);
-	}
+        {
+          clo_encode_string(b, p->string, error);
+          clo_encode_append(b, ":", error);
+          clo_encode(&p->value, b, error);
+          if (p[1].string)
+            clo_encode_append(b, ",", error);
+        }
       clo_encode_append(b, "}", error);
       break;
     case CLO_ARRAY:
       clo_encode_append(b, "[", error);
       for (clo *e = o->array; e->type != CLO_UNDEFINED; e ++)
-	{
-	  clo_encode(e, b, error);
-	  if (e[1].type != CLO_UNDEFINED)
-	    clo_encode_append(b, ",", error);
-	}
+        {
+          clo_encode(e, b, error);
+          if (e[1].type != CLO_UNDEFINED)
+            clo_encode_append(b, ",", error);
+        }
       clo_encode_append(b, "]", error);
       break;
     case CLO_TRUE:
@@ -173,29 +173,4 @@ void clo_encode(clo *o, buffer *b, int *error)
       clo_encode_append(b, "null", error);
       break;
     }
-}
-
-int main()
-{
-  buffer buffer;
-  int error = 0;
-  clo o;
-
-  o = clo_object
-    ({"hello", clo_string("world")},
-     {"test", clo_array
-	 (clo_number(42.23),
-	  clo_number(1),
-	  clo_string("test\r\n\t☃\\\""),
-	  clo_true(),
-	  clo_object
-	  ({"some", clo_true()},
-	   {"object", clo_false()}),
-	  clo_false(),
-	  clo_null())});
-
-  buffer_init(&buffer);
-  clo_encode(&o, &buffer, &error);
-  fprintf(stderr, "errors %d\n", error);
-  fprintf(stdout, "%.*s\n", (int) buffer_size(&buffer), buffer_data(&buffer));
 }

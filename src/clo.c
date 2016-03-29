@@ -133,6 +133,8 @@ void clo_encode_number(buffer *b, double number, int *error)
 
 void clo_encode(clo *o, buffer *b, int *error)
 {
+  int first;
+
   switch (o->type)
     {
     case CLO_STRING:
@@ -143,23 +145,32 @@ void clo_encode(clo *o, buffer *b, int *error)
       break;
     case CLO_OBJECT:
       clo_encode_append(b, "{", error);
+      first = 1;
       for (clo_pair *p = o->object; p->string; p ++)
         {
-          clo_encode_string(b, p->string, error);
-          clo_encode_append(b, ":", error);
-          clo_encode(&p->value, b, error);
-          if (p[1].string)
-            clo_encode_append(b, ",", error);
+          if (p->value.type != CLO_UNDEFINED)
+            {
+              if (!first)
+                clo_encode_append(b, ",", error);
+              else
+                first = 0;
+              clo_encode_string(b, p->string, error);
+              clo_encode_append(b, ":", error);
+              clo_encode(&p->value, b, error);
+            }
         }
       clo_encode_append(b, "}", error);
       break;
     case CLO_ARRAY:
       clo_encode_append(b, "[", error);
+      first = 1;
       for (clo *e = o->array; e->type != CLO_UNDEFINED; e ++)
         {
-          clo_encode(e, b, error);
-          if (e[1].type != CLO_UNDEFINED)
+          if (!first)
             clo_encode_append(b, ",", error);
+          else
+            first = 0;
+          clo_encode(e, b, error);
         }
       clo_encode_append(b, "]", error);
       break;

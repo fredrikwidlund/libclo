@@ -39,10 +39,11 @@ struct clo_pair
 #define clo_string(v)   ((clo){.type = CLO_STRING, .string = (v)})
 #define clo_number(v)   ((clo){.type = CLO_NUMBER, .number = (v)})
 #define clo_object(...) ((clo){.type = CLO_OBJECT, .object = (clo_pair[]){__VA_ARGS__, {.string = NULL}}})
-#define clo_array(...)  ((clo){.type = CLO_ARRAY, .array = (clo[]){__VA_ARGS__, {.type = CLO_UNDEFINED}}})
+#define clo_array(...)  ((clo){.type = CLO_ARRAY, .array = (clo[]){__VA_ARGS__, clo_undefined()}})
 #define clo_true()      ((clo){.type = CLO_TRUE})
 #define clo_false()     ((clo){.type = CLO_FALSE})
 #define clo_null()      ((clo){.type = CLO_NULL})
+#define clo_undefined() ((clo){.type = CLO_UNDEFINED})
 
 uint32_t clo_decode_utf8(uint32_t *, uint32_t *, uint32_t);
 void     clo_encode_append(buffer *, char *, int *);

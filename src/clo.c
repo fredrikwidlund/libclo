@@ -5,8 +5,7 @@
 
 #include "clo.h"
 
-/* clo_decode_utf8 from http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ */
-
+// clo_decode_utf8 from http://bjoern.hoehrmann.de/utf-8/decoder/dfa/
 uint32_t clo_decode_utf8(uint32_t *state, uint32_t *codep, uint32_t byte)
 {
   static const uint8_t utf8d[] = {
@@ -34,19 +33,15 @@ uint32_t clo_decode_utf8(uint32_t *state, uint32_t *codep, uint32_t byte)
   return *state;
 }
 
-void clo_buffer_append(clo_buffer *b, char *base, size_t size, int *error)
+void clo_encode_append(buffer *b, char *string, int *error)
 {
-  if (size < b->size)
-    {
-      memcpy(b->base, base, size);
-      b->base += size;
-      b->size -= size;
-    }
-  else
-    (*error) ++;
+  int e;
+
+  e = buffer_insert(b, buffer_size(b), string, strlen(string));
+  *error += (e != 0);
 }
 
-void clo_encode_control(uint8_t c, clo_buffer *b, int *error)
+void clo_encode_control(buffer *b, uint8_t c, int *error)
 {
   static const char *(control[32]) = {
     "\\u0000", "\\u0001", "\\u0002", "\\u0003", "\\u0004", "\\u0005", "\\u0006", "\\u0007",
@@ -55,14 +50,14 @@ void clo_encode_control(uint8_t c, clo_buffer *b, int *error)
     "\\u0018", "\\u0019", "\\u001a", "\\u001b", "\\u001c", "\\u001d", "\\u001e", "\\u001f",
   };
   if (c < 32)
-    clo_buffer_append(b, (char *) control[c], strlen(control[c]), error);
+    clo_encode_append(b, (char *) control[c], error);
   else
     (*error) ++;
 }
 
-int clo_encode_utf8(char *string, clo_buffer *b, int *error)
+int clo_encode_utf8(buffer *b, char *string, int *error)
 {
-  uint32_t codepoint, state = CLO_DECODE_UTF8_ACCEPT;
+  uint32_t codepoint, state = 0;
   int i = 0;
 
   while (string[i])
@@ -74,120 +69,119 @@ int clo_encode_utf8(char *string, clo_buffer *b, int *error)
     }
 
   if (state == CLO_DECODE_UTF8_ACCEPT)
-    clo_buffer_append(b, string, i, error);
+    buffer_insert(b, buffer_size(b), string, i);
   else
     (*error) ++;
   return i;
 }
 
-void clo_encode_number(double number, clo_buffer *b, int *error)
+void clo_encode_string(buffer *b, char *string, int *error)
 {
-  char string[32];
+  char *data;
 
-  (void) snprintf(string, sizeof string, "%.16g", number);
-  clo_buffer_append(b, string, strlen(string), error);
-}
-
-void clo_encode_string(char *string, clo_buffer *b, int *error)
-{
-  clo_buffer_append(b, "\"", 1, error);
+  clo_encode_append(b, "\"", error);
   while (1)
     {
+      buffer_reserve(b, buffer_size(b) + strlen(string));
+      data = buffer_data(b) + buffer_size(b);
       while (*string >= 0x20 && *string != '"' && *string != '\\')
         {
-          clo_buffer_append(b, string, 1, error);
+          *data = *string;
+          data ++;
           string ++;
         }
+      b->size = data - buffer_data(b);
       if (*string < 0)
-        string += clo_encode_utf8(string, b, error);
+        string += clo_encode_utf8(b, string, error);
       else if (!*string)
         break;
+      else if (*string < 0x20)
+        {
+          clo_encode_control(b, *string, error);
+          string ++;
+        }
       else if (*string == '"')
         {
-          clo_buffer_append(b, "\\\"", 2, error);
+          clo_encode_append(b, "\\\"", error);
           string ++;
         }
       else if (*string == '\\')
         {
-          clo_buffer_append(b, "\\\\", 2, error);
+          clo_encode_append(b, "\\\\", error);
           string ++;
         }
       else
         {
-          clo_encode_control(*string, b, error);
-          string ++;
+          (*error) ++;
+          return;
         }
     }
-  clo_buffer_append(b, "\"", 1, error);
+  clo_encode_append(b, "\"", error);
 }
 
-void clo_encode_clo(clo *o, clo_buffer *b, int *error)
+void clo_encode_number(buffer *b, double number, int *error)
+{
+  char string[32];
+  int e;
+
+  e = snprintf(string, sizeof string, "%.16g", number);
+  if (e > 0 && e < (int) sizeof string)
+    clo_encode_append(b, string, error);
+  else
+    (*error) ++;
+}
+
+void clo_encode(clo *o, buffer *b, int *error)
 {
   int first;
 
   switch (o->type)
     {
+    case CLO_STRING:
+      clo_encode_string(b, o->string, error);
+      break;
+    case CLO_NUMBER:
+      clo_encode_number(b, o->number, error);
+      break;
     case CLO_OBJECT:
-      clo_buffer_append(b, "{", 1, error);
+      clo_encode_append(b, "{", error);
       first = 1;
       for (clo_pair *p = o->object; p->string; p ++)
         {
           if (p->value.type != CLO_UNDEFINED)
             {
-              if (first)
-                first = 0;
+              if (!first)
+                clo_encode_append(b, ",", error);
               else
-                clo_buffer_append(b, ",", 1, error);
-              clo_encode_string(p->string, b, error);
-              clo_buffer_append(b, ":", 1, error);
-              clo_encode_clo(&p->value, b, error);
+                first = 0;
+              clo_encode_string(b, p->string, error);
+              clo_encode_append(b, ":", error);
+              clo_encode(&p->value, b, error);
             }
         }
-      clo_buffer_append(b, "}", 1, error);
+      clo_encode_append(b, "}", error);
       break;
     case CLO_ARRAY:
-      clo_buffer_append(b, "[", 1, error);
+      clo_encode_append(b, "[", error);
       first = 1;
-      for (clo *e = o->array; e->type != CLO_END_OF_ARRAY; e ++)
+      for (clo *e = o->array; e->type != CLO_UNDEFINED; e ++)
         {
-          if (e->type != CLO_UNDEFINED)
-            {
-              if (first)
-                first = 0;
-              else
-                clo_buffer_append(b, ",", 1, error);
-              clo_encode_clo(e, b, error);
-            }
+          if (!first)
+            clo_encode_append(b, ",", error);
+          else
+            first = 0;
+          clo_encode(e, b, error);
         }
-      clo_buffer_append(b, "]", 1, error);
-      break;
-    case CLO_STRING:
-      clo_encode_string(o->string, b, error);
-      break;
-    case CLO_NUMBER:
-      clo_encode_number(o->number, b, error);
+      clo_encode_append(b, "]", error);
       break;
     case CLO_TRUE:
-      clo_buffer_append(b, "true", 4, error);
+      clo_encode_append(b, "true", error);
       break;
     case CLO_FALSE:
-      clo_buffer_append(b, "false", 5, error);
+      clo_encode_append(b, "false", error);
       break;
     case CLO_NULL:
-      clo_buffer_append(b, "null", 4, error);
+      clo_encode_append(b, "null", error);
       break;
-    default:
-      (*error) ++;
     }
-}
-
-int clo_encode(clo *o, char *base, size_t size)
-{
-  clo_buffer b = {.base = base, .size = size};
-  int error = 0;
-
-  clo_encode_clo(o, &b, &error);
-  clo_buffer_append(&b, "", 1, &error);
-
-  return error ? - 1 : 0;
 }

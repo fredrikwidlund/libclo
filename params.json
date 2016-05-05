@@ -1,6 +1,6 @@
 {
   "name": "Libclo",
   "tagline": "Read-only compound literal objects",
-  "body": "### What is it\r\nA simple C library to emit serialized JSON structures.\r\n\r\n### How do I use it\r\n`ooo`\r\n\r\n### Design goals\r\n",
+  "body": "### What is it\r\nA simple C library to emit serialized JSON structures.\r\n\r\n### How do I use it\r\n`clo_t o = clo_object({\"hello\", clo_string(\"world\");`\r\n\r\n### Design goals\r\n",
   "note": "Don't delete this file! It's used internally to help with page regeneration."
 }

@@ -6,8 +6,10 @@
     <title>Libclo by fredrikwidlund</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/github-light.css">
-    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -17,10 +19,7 @@
       <header>
         <h1>Libclo</h1>
         <p>Read-only compound literal objects</p>
-
         <p class="view"><a href="https://github.com/fredrikwidlund/libclo">View the Project on GitHub <small>fredrikwidlund/libclo</small></a></p>
-
-
         <ul>
           <li><a href="https://github.com/fredrikwidlund/libclo/zipball/master">Download <strong>ZIP File</strong></a></li>
           <li><a href="https://github.com/fredrikwidlund/libclo/tarball/master">Download <strong>TAR Ball</strong></a></li>
@@ -28,25 +27,85 @@
         </ul>
       </header>
       <section>
-        <h3>
-<a id="what-is-it" class="anchor" href="#what-is-it" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What is it</h3>
+        <h1>
+<a id="libclo" class="anchor" href="#libclo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>libclo</h1>
 
-<p>A simple C library to emit serialized JSON structures.</p>
+<p>Read-only compound literal objects</p>
 
-<h3>
-<a id="how-do-i-use-it" class="anchor" href="#how-do-i-use-it" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How do I use it</h3>
+<h2>
+<a id="description" class="anchor" href="#description" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Description</h2>
 
-<p><code>clo_t o = clo_object({"hello", clo_string("world");</code></p>
+<p>libclo is a C library with the single purpose of emitting serialized JSON structures in a high performance environment, while correctly handling escaping, control characters and UTF-8 encoding. This can be useful for example when using JSON for log formats, or when building RESTful services.</p>
 
-<h3>
-<a id="design-goals" class="anchor" href="#design-goals" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Design goals</h3>
+<p>It does this by constructing the JSON structures as compound literals, which does not require any runtime heap memory allocation or system calls.</p>
+
+<h2>
+<a id="performance" class="anchor" href="#performance" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Performance</h2>
+
+<p>Benchmarks coming soon...</p>
+
+<h2>
+<a id="build" class="anchor" href="#build" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build</h2>
+
+<pre><code>$ git clone https://github.com/fredrikwidlund/libclo.git
+$ cd libclo
+$ ./autogen.sh
+$ ./configure
+$ make install
+</code></pre>
+
+<h2>
+<a id="test" class="anchor" href="#test" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Test</h2>
+
+<p>Tests require 100% code coverage to succeed.</p>
+
+<pre><code>$ make check
+[...]
+$ cat test/coverage.sh.log 
+[clo]
+File 'src/clo.c'
+Lines executed:100.00% of 95
+Branches executed:100.00% of 50
+Taken at least once:100.00% of 50
+Calls executed:100.00% of 28
+PASS test/coverage.sh (exit status: 0)
+</code></pre>
+
+<h2>
+<a id="install" class="anchor" href="#install" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install</h2>
+
+<pre><code>$ make install
+</code></pre>
+
+<h2>
+<a id="use" class="anchor" href="#use" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Use</h2>
+
+<pre><code>$ cat main.c
+#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+
+#include &lt;clo.h&gt;
+
+int main()
+{
+  char buffer[1024];
+  clo o;
+
+  o = clo_object({"hello", clo_string("world")});
+  clo_encode(&amp;o, buffer, sizeof buffer);
+  puts(buffer);
+}
+$ gcc -Wall -O3 -flto -fuse-linker-plugin -o main main.c -lclo
+$ ./main 
+{"hello":"world"}
+</code></pre>
       </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/fredrikwidlund">fredrikwidlund</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
-      </footer>
     </div>
-    <script src="javascripts/scale.fix.js"></script>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/fredrikwidlund">fredrikwidlund</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
     
   </body>
 </html>

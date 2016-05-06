@@ -2,27 +2,24 @@
 Read-only compound literal objects
 
 ## Description
-libclo is a C library with the single purpose of emitting serialized JSON structures in a high performance environment, while correctly handling escaping, control character and UTF-8 encoding. This can be useful for example when using JSON for log formats, or when construct RESTful services.
+libclo is a C library with the single purpose of emitting serialized JSON structures in a high performance environment, while correctly handling escaping, control characters and UTF-8 encoding. This can be useful for example when using JSON for log formats, or when building RESTful services.
 
 It does this by constructing the JSON structures as compound literals, which does not require any runtime heap memory allocation or system calls.
-
 
 ## Performance
 Benchmarks coming soon...
 
 ## Build
-
 ```
 $ git clone https://github.com/fredrikwidlund/libclo.git
 $ cd libclo
 $ ./autogen.sh
 $ ./configure
-$ make install
+$ make
 ```
 
 ## Test
 Tests require 100% code coverage to succeed.
-
 
 ```
 $ make check
@@ -38,7 +35,6 @@ PASS test/coverage.sh (exit status: 0)
 ```
 
 ## Install
-
 ```
 $ make install
 ```

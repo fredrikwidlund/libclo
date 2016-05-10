@@ -6,10 +6,8 @@
     <title>Libclo by fredrikwidlund</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/github-dark.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -18,8 +16,11 @@
     <div class="wrapper">
       <header>
         <h1>Libclo</h1>
-        <p>Read-only compound literal objects</p>
+        <p>Compound literal JSON objects</p>
+
         <p class="view"><a href="https://github.com/fredrikwidlund/libclo">View the Project on GitHub <small>fredrikwidlund/libclo</small></a></p>
+
+
         <ul>
           <li><a href="https://github.com/fredrikwidlund/libclo/zipball/master">Download <strong>ZIP File</strong></a></li>
           <li><a href="https://github.com/fredrikwidlund/libclo/tarball/master">Download <strong>TAR Ball</strong></a></li>
@@ -30,28 +31,57 @@
         <h1>
 <a id="libclo" class="anchor" href="#libclo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>libclo</h1>
 
-<p>Read-only compound literal objects</p>
+<p>Compound literal JSON objects</p>
 
 <h2>
 <a id="description" class="anchor" href="#description" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Description</h2>
 
 <p>libclo is a C library with the single purpose of emitting serialized JSON structures in a high performance environment, while correctly handling escaping, control characters and UTF-8 encoding. This can be useful for example when using JSON for log formats, or when building RESTful services.</p>
 
-<p>It does this by constructing the JSON structures as compound literals, which does not require any runtime heap memory allocation or system calls.</p>
+<p>It does this by constructing the JSON structures as compound literals, which does not require any runtime memory allocation or system calls.</p>
 
 <h2>
 <a id="performance" class="anchor" href="#performance" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Performance</h2>
 
-<p>Benchmarks coming soon...</p>
+<p><a href="https://github.com/fredrikwidlund/libclo_benchmark">Simple JSON serialization benchmark</a></p>
+
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Performance</th>
+<th>Factor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>libclo</td>
+<td>378.94 ns</td>
+<td>1.0x</td>
+</tr>
+<tr>
+<td>jansson</td>
+<td>2463.8 ns</td>
+<td>6.5x</td>
+</tr>
+<tr>
+<td>cJSON</td>
+<td>1693.1 ns</td>
+<td>4.5x</td>
+</tr>
+</tbody>
+</table>
+
+<p>libclo is a small subset though of the functionality in cJSON, and even more so of the functionality in jansson.</p>
 
 <h2>
-<a id="build" class="anchor" href="#build" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build</h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
 
 <pre><code>$ git clone https://github.com/fredrikwidlund/libclo.git
 $ cd libclo
 $ ./autogen.sh
 $ ./configure
-$ make
+$ make install
 </code></pre>
 
 <h2>
@@ -72,39 +102,74 @@ PASS test/coverage.sh (exit status: 0)
 </code></pre>
 
 <h2>
-<a id="install" class="anchor" href="#install" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install</h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
 
-<pre><code>$ make install
-</code></pre>
+<h3>
+<a id="hello-world" class="anchor" href="#hello-world" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Hello world</h3>
 
-<h2>
-<a id="use" class="anchor" href="#use" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Use</h2>
+<div class="highlight highlight-source-c"><pre>$ cat hello.c
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>stdio.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>stdlib.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>stdint.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>clo.h<span class="pl-pds">&gt;</span></span>
 
-<pre><code>$ cat main.c
-#include &lt;stdio.h&gt;
-#include &lt;stdint.h&gt;
-#include &lt;clo.h&gt;
-
-int main()
+<span class="pl-k">int</span> <span class="pl-en">main</span>()
 {
-  char buffer[1024];
-  clo o;
-
-  o = clo_object({"hello", clo_string("world")});
-  clo_encode(&amp;o, buffer, sizeof buffer);
-  puts(buffer);
+  <span class="pl-k">char</span> string[<span class="pl-c1">256</span>];
+  <span class="pl-c1">clo_encode</span>((clo[]){<span class="pl-c1">clo_object</span>({<span class="pl-s"><span class="pl-pds">"</span>hello<span class="pl-pds">"</span></span>, <span class="pl-c1">clo_string</span>(<span class="pl-s"><span class="pl-pds">"</span>world<span class="pl-pds">"</span></span>)})}, string, <span class="pl-k">sizeof</span> string);
+  <span class="pl-c1">puts</span>(string);
 }
-$ gcc -Wall -O3 -flto -fuse-linker-plugin -o main main.c -lclo
-$ ./main 
-{"hello":"world"}
-</code></pre>
+$ gcc -Wall -o hello hello.c -lclo
+$ ./hello
+{<span class="pl-s"><span class="pl-pds">"</span>hello<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>world<span class="pl-pds">"</span></span>}</pre></div>
+
+<h3>
+<a id="json-types" class="anchor" href="#json-types" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>JSON types</h3>
+
+<div class="highlight highlight-source-c"><pre>$ cat types.c
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>stdio.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>stdlib.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>stdint.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>clo.h<span class="pl-pds">&gt;</span></span>
+
+<span class="pl-k">int</span> <span class="pl-en">main</span>()
+{
+  <span class="pl-k">char</span> buffer[<span class="pl-c1">256</span>];
+
+  clo string = <span class="pl-c1">clo_string</span>(<span class="pl-s"><span class="pl-pds">"</span>unicode snowman - <span class="pl-cce">\xE2\x98\x83</span><span class="pl-pds">"</span></span>);
+  clo real = <span class="pl-c1">clo_real</span>(<span class="pl-c1">3.14</span>);
+  clo integer = <span class="pl-c1">clo_integer</span>(<span class="pl-c1">42</span>);
+  clo <span class="pl-c1">true</span> = <span class="pl-c1">clo_true</span>();
+  clo <span class="pl-c1">false</span> = <span class="pl-c1">clo_false</span>();
+  clo null = <span class="pl-c1">clo_null</span>();
+
+  clo array = <span class="pl-c1">clo_array</span>(string, real, integer, <span class="pl-c1">true</span>, <span class="pl-c1">false</span>, null);
+  <span class="pl-c1">clo_encode</span>(&amp;array, buffer, <span class="pl-k">sizeof</span> buffer);
+  <span class="pl-c1">puts</span>(buffer);
+
+  clo object = clo_object
+    ({<span class="pl-s"><span class="pl-pds">"</span>string<span class="pl-pds">"</span></span>, string},
+     {<span class="pl-s"><span class="pl-pds">"</span>real<span class="pl-pds">"</span></span>, real},
+     {<span class="pl-s"><span class="pl-pds">"</span>integer<span class="pl-pds">"</span></span>, integer},
+     {<span class="pl-s"><span class="pl-pds">"</span>true<span class="pl-pds">"</span></span>, <span class="pl-c1">true</span>},
+     {<span class="pl-s"><span class="pl-pds">"</span>false<span class="pl-pds">"</span></span>, <span class="pl-c1">false</span>},
+     {<span class="pl-s"><span class="pl-pds">"</span>null<span class="pl-pds">"</span></span>, null},
+     {<span class="pl-s"><span class="pl-pds">"</span>array<span class="pl-pds">"</span></span>, array},
+     {<span class="pl-s"><span class="pl-pds">"</span>nested object<span class="pl-pds">"</span></span>, <span class="pl-c1">clo_object</span>({<span class="pl-s"><span class="pl-pds">"</span>object<span class="pl-pds">"</span></span>, <span class="pl-c1">clo_object</span>({<span class="pl-s"><span class="pl-pds">"</span>inner<span class="pl-pds">"</span></span>, <span class="pl-c1">clo_true</span>()})})});
+  <span class="pl-c1">clo_encode</span>(&amp;object, buffer, <span class="pl-k">sizeof</span> buffer);
+  <span class="pl-c1">puts</span>(buffer);
+}
+$ gcc -Wall -o types types.c -lclo
+$ ./types 
+[<span class="pl-s"><span class="pl-pds">"</span>unicode snowman - ☃<span class="pl-pds">"</span></span>,<span class="pl-c1">3.14</span>,<span class="pl-c1">42</span>,<span class="pl-c1">true</span>,<span class="pl-c1">false</span>,null]
+{<span class="pl-s"><span class="pl-pds">"</span>string<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>unicode snowman - ☃<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>real<span class="pl-pds">"</span></span>:<span class="pl-c1">3.14</span>,<span class="pl-s"><span class="pl-pds">"</span>integer<span class="pl-pds">"</span></span>:<span class="pl-c1">42</span>,<span class="pl-s"><span class="pl-pds">"</span>true<span class="pl-pds">"</span></span>:<span class="pl-c1">true</span>,<span class="pl-s"><span class="pl-pds">"</span>false<span class="pl-pds">"</span></span>:<span class="pl-c1">false</span>,<span class="pl-s"><span class="pl-pds">"</span>null<span class="pl-pds">"</span></span>:null,<span class="pl-s"><span class="pl-pds">"</span>array<span class="pl-pds">"</span></span>:[<span class="pl-s"><span class="pl-pds">"</span>unicode snowman - ☃<span class="pl-pds">"</span></span>,<span class="pl-c1">3.14</span>,<span class="pl-c1">42</span>,<span class="pl-c1">true</span>,<span class="pl-c1">false</span>,null],<span class="pl-s"><span class="pl-pds">"</span>nested object<span class="pl-pds">"</span></span>:{<span class="pl-s"><span class="pl-pds">"</span>object<span class="pl-pds">"</span></span>:{<span class="pl-s"><span class="pl-pds">"</span>inner<span class="pl-pds">"</span></span>:<span class="pl-c1">true</span>}}}</pre></div>
       </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/fredrikwidlund">fredrikwidlund</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
     </div>
-    <footer>
-      <p>Project maintained by <a href="https://github.com/fredrikwidlund">fredrikwidlund</a></p>
-      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
-    </footer>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    <script src="javascripts/scale.fix.js"></script>
     
   </body>
 </html>

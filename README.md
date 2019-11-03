@@ -25,7 +25,7 @@ libclo is a small subset though of the functionality in cJSON, and even more so 
 $ git clone https://github.com/fredrikwidlund/libclo.git
 $ cd libclo
 $ ./autogen.sh
-$ ./configure
+$ ./configure --prefix=/usr AR=gcc-ar NM=gcc-nm RANLIB=gcc-ranlib
 $ make install
 ```
 

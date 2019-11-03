@@ -18,12 +18,12 @@ headerfiles_HEADERS = $(HEADER_FILES)
 ### example ###
 
 bin_PROGRAMS = example/hello
-example_hello_LDADD = -lclo
+example_hello_LDADD = libclo.la
 
 ### unit tests ###
 
 CHECK_CFLAGS = -std=gnu11 -O0 -g -ftest-coverage -fprofile-arcs
-CHECK_LDADD = -L. -lclo_test -lcmocka
+CHECK_LDADD = -L. libclo_test.a -lcmocka
 
 check_LIBRARIES = libclo_test.a
 libclo_test_a_CFLAGS = $(CHECK_CFLAGS)
